@@ -14,7 +14,7 @@ Paygent eliminates the middleman. Agent A locks Bitcoin-backed funds in a Clarit
 Agent A                    Stacks Contract                Agent B
   │                              │                           │
   │── create-escrow ───────────▶│                           │
-  │   (50 uSTX + request hash)  │  funds locked             │
+  │   (50 msBTC + request hash) │  funds locked             │
   │                              │                           │
   │── HTTP request (job #1) ────────────────────────────────▶│
   │                              │                           │
@@ -29,7 +29,7 @@ Agent A                    Stacks Contract                Agent B
   │◀──────────────── signed recommendation ──────────────────│
 ```
 
-**In the demo:** Agent A pays 50 microSTX for DeFi yield intelligence. Agent B verifies the escrow exists, fetches live data from Zest Protocol, Bitflow, and StackingDAO, signs its recommendation with secp256k1, and claims payment through the Clarity contract — all autonomously.
+**In the demo:** Agent A pays 50 mock sBTC for DeFi yield intelligence. Agent B verifies the escrow exists, fetches live data from Zest Protocol, Bitflow, and StackingDAO, signs its recommendation with secp256k1, and claims payment through the Clarity contract — all autonomously.
 
 ## Quick Start
 
@@ -54,7 +54,7 @@ Outputs mnemonics, private keys, and the compressed public key for Agent B. Impo
 
 ### 2. Fund Wallets
 
-Get testnet STX from the [Hiro Faucet](https://explorer.hiro.so/sandbox/faucet?chain=testnet). Agent A needs STX for escrow + gas. Agent B needs STX for gas only.
+Get testnet STX from the [Hiro Faucet](https://explorer.hiro.so/sandbox/faucet?chain=testnet). Agent A needs ~100 STX (50 for escrow + gas). Agent B needs ~10 STX for gas only.
 
 ### 3. Deploy Contract
 
@@ -69,6 +69,7 @@ Paste the output contract address into `.env`.
 ```bash
 npm run demo          # Live on Stacks testnet (~60s)
 npm run demo:offline  # No blockchain, instant (~2s)
+npm start             # Browser demo at http://localhost:3000
 ```
 
 ## Architecture
@@ -82,24 +83,35 @@ src/
 │   ├── deploy.ts          # One-time contract deployment
 │   ├── escrow.ts          # create/complete/refund + tx polling + post conditions
 │   └── verify.ts          # Canonical hashing, secp256k1 signing, pubkey recovery
+├── demo/
+│   ├── server.ts          # Express server with SSE streaming for browser demo
+│   ├── events.ts          # Event bus for real-time demo updates
+│   └── run.ts             # CLI demo runner
+├── x402/
+│   ├── client.ts          # x402Fetch — auto-handles HTTP 402 + escrow payment
+│   ├── middleware.ts       # x402Paywall — Express middleware for pay-per-request APIs
+│   ├── types.ts            # x402 protocol types
+│   └── verify.ts           # Payment verification
 ├── yield/
 │   └── fetcher.ts         # DefiLlama API + mock fallback
 ├── config.ts              # Env var loader with validation
 └── types.ts               # TypeScript interfaces
 
 contracts/
-└── agentpay-escrow.clar   # Clarity smart contract
+├── agentpay-escrow.clar   # SIP-010 escrow with secp256k1 verification
+├── mock-sbtc.clar         # Mock sBTC for testnet testing
+└── sip-010-trait.clar     # SIP-010 fungible token trait
 ```
 
 ### Smart Contract
 
 The Clarity contract implements three operations:
 
-- **`create-escrow`** — Agent A locks STX, registers Agent B's public key, and commits a request hash (SHA256 of the question) on-chain
+- **`create-escrow`** — Agent A locks SIP-010 tokens (sBTC), registers Agent B's public key, and commits a request hash (SHA256 of the question) on-chain
 - **`complete-escrow`** — Agent B submits a result hash + secp256k1 signature; the contract verifies on-chain with `secp256k1-verify` and releases funds atomically via `try!`
 - **`refund-escrow`** — Agent A reclaims funds after 144 blocks (~24h) if Agent B never delivers
 
-All STX transfers are wrapped with `try!` so payment failures abort the transaction rather than silently succeeding. Post conditions enforce exact amounts on the TypeScript side.
+All token transfers are wrapped with `try!` so payment failures abort the transaction rather than silently succeeding. Post conditions enforce exact amounts on the TypeScript side.
 
 ### Trust Model
 
@@ -116,14 +128,14 @@ Live DeFi yields from [DefiLlama](https://defillama.com/)'s yield aggregator API
 
 | Command | What it does |
 |---------|-------------|
-| `npm run demo` | Full end-to-end flow on testnet |
+| `npm start` | Launch browser demo at http://localhost:3000 |
+| `npm run demo` | Full end-to-end flow on testnet (CLI) |
 | `npm run demo:offline` | Full flow without blockchain (~2s) |
 | `npm run deploy` | Deploy contract to testnet |
 | `npm run agent-b` | Start Agent B server standalone |
 | `npm run agent-a` | Run Agent A request standalone |
 | `npm run build` | Compile TypeScript |
-| `npm test` | Run unit tests (24 tests) |
-| `INTEGRATION=true npm test` | Include on-chain integration tests |
+| `npm test` | Run unit tests |
 
 ## Tech Stack
 
@@ -141,7 +153,7 @@ Paygent implements the [x402 protocol](https://www.x402.org/) natively on Stacks
 **Server side (3 lines):**
 
 ```typescript
-import { x402Paywall } from "agentpay/x402";
+import { x402Paywall } from "paygent/x402";
 
 app.post("/api/data", x402Paywall({
   price: 50,
@@ -165,6 +177,11 @@ No Coinbase SDK needed. No EVM dependency. Settles directly on Stacks via Clarit
 The testnet demo uses a mock sBTC token (`mock-sbtc`). On mainnet, change two env vars:
 
 ```env
+# Testnet (default)
+TOKEN_CONTRACT_ADDRESS=ST2V4QE2...  # your mock-sbtc deploy address
+TOKEN_CONTRACT_NAME=mock-sbtc
+
+# Mainnet
 TOKEN_CONTRACT_ADDRESS=SM3VDXK3WZZSA84XXFKAFAF15NNZX32CTSG82JFQ4
 TOKEN_CONTRACT_NAME=sbtc-token
 ```
@@ -172,15 +189,6 @@ TOKEN_CONTRACT_NAME=sbtc-token
 The escrow contract accepts any SIP-010 token via trait parameter. Zero code changes needed. The same contract that works with mock sBTC on testnet works with real sBTC on mainnet.
 
 **Supported tokens:** sBTC, USDCx, or any SIP-010 fungible token deployed on Stacks.
-
-## Contracts
-
-| Contract | Testnet Address | Purpose |
-|----------|----------------|---------|
-| `sip-010-trait` | `ST2V4QE2...JPEJ` | SIP-010 fungible token trait |
-| `mock-sbtc` | `ST2V4QE2...JPEJ` | Mock sBTC for testnet testing |
-| `agentpay-escrow-v3` | `ST2V4QE2...JPEJ` | SIP-010 escrow with secp256k1 verification |
-| `agentpay-escrow-v2` | `ST2V4QE2...JPEJ` | Original STX escrow (still works) |
 
 ## Troubleshooting
 

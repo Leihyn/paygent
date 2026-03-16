@@ -45,12 +45,10 @@ export const config = {
     name: required("CONTRACT_NAME"),
   },
   // SIP-010 token used for escrow payments (sBTC, mock-sbtc, etc.)
-  // If not set, falls back to STX-based escrow (v2 contract)
   token: {
     address: optional("TOKEN_CONTRACT_ADDRESS") || "",
     name: optional("TOKEN_CONTRACT_NAME") || "",
   },
   paymentAmount: paymentUstx,
-  // Keep old name for backward compat
   paymentUstx,
 };

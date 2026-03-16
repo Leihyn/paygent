@@ -1,9 +1,9 @@
-// Deploys the v3 contract suite to Stacks testnet:
+// Deploys the contract suite to Stacks testnet:
 //   1. sip-010-trait (the SIP-010 fungible token trait)
 //   2. mock-sbtc (mock sBTC for testing)
-//   3. agentpay-escrow-v3 (SIP-010 escrow contract)
+//   3. agentpay-escrow (SIP-010 escrow contract)
 //
-// Run: npx ts-node src/contract/deploy-v3.ts
+// Run: npx ts-node src/contract/deploy.ts
 
 import {
   makeContractDeploy,
@@ -85,7 +85,7 @@ async function waitForTx(txid: string, label: string): Promise<void> {
 
 async function main() {
   console.log("=========================================================");
-  console.log("  Paygent v3 Contract Deployment");
+  console.log("  Paygent Contract Deployment");
   console.log("  SIP-010 Token Escrow + Mock sBTC");
   console.log("=========================================================");
 
@@ -116,23 +116,23 @@ async function main() {
   await waitForTx(txid2, "mock-sbtc");
 
   const txid3 = await deployContract(
-    account.stxPrivateKey, "agentpay-escrow-v3",
-    path.join(contractsDir, "agentpay-escrow-v3.clar"), nonce++
+    account.stxPrivateKey, "agentpay-escrow",
+    path.join(contractsDir, "agentpay-escrow.clar"), nonce++
   );
 
-  await waitForTx(txid3, "agentpay-escrow-v3");
+  await waitForTx(txid3, "agentpay-escrow");
 
   console.log("\n=========================================================");
   console.log("  All contracts deployed successfully");
   console.log("=========================================================");
   console.log(`\n  Update your .env:\n`);
   console.log(`  CONTRACT_ADDRESS=${address}`);
-  console.log(`  CONTRACT_NAME=agentpay-escrow-v3`);
+  console.log(`  CONTRACT_NAME=agentpay-escrow`);
   console.log(`  TOKEN_CONTRACT_ADDRESS=${address}`);
   console.log(`  TOKEN_CONTRACT_NAME=mock-sbtc`);
   console.log(`\n  Trait: ${address}.sip-010-trait`);
   console.log(`  Token: ${address}.mock-sbtc`);
-  console.log(`  Escrow: ${address}.agentpay-escrow-v3\n`);
+  console.log(`  Escrow: ${address}.agentpay-escrow\n`);
 }
 
 main().catch(err => {

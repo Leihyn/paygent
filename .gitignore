@@ -1,1 +1,7 @@
+node_modules/
+dist/
+.env
+*.js.map
+*.mp4
+.DS_Store
 .claude/

@@ -1,18 +1,21 @@
-// All interactions with the Paygent escrow Clarity contract.
+// Escrow functions for the SIP-010 contract.
+// Uses a fungible token (mock-sbtc) instead of native STX.
 
 import {
   makeContractCall,
   broadcastTransaction,
   callReadOnlyFunction,
   standardPrincipalCV,
+  contractPrincipalCV,
   uintCV,
   bufferCV,
   cvToValue,
   PostConditionMode,
   AnchorMode,
-  makeStandardSTXPostCondition,
-  makeContractSTXPostCondition,
   FungibleConditionCode,
+  makeStandardFungiblePostCondition,
+  makeContractFungiblePostCondition,
+  createAssetInfo,
 } from "@stacks/transactions";
 import { generateWallet } from "@stacks/wallet-sdk";
 import { config, isOfflineDemo } from "../config";
@@ -29,38 +32,46 @@ async function deriveAccount(mnemonic: string) {
   return account;
 }
 
-// Agent A creates an escrow, locking payment on-chain.
-// requestHashHex: SHA256 of the request payload — commits to what Agent A is paying for.
+// Agent A creates a SIP-010 escrow, locking fungible tokens on-chain.
+// requestHashHex: SHA256 of the request payload -- commits to what Agent A is paying for.
 export async function createEscrow(
   agentBAddress: string,
   agentBPublicKeyHex: string,
-  amountUstx: number,
+  amount: number,
   requestHashHex: string
 ): Promise<{ txId: string; jobId: number }> {
   if (isOfflineDemo) {
-    console.log("[Paygent] OFFLINE MODE — simulating escrow creation");
+    console.log("[Paygent] OFFLINE MODE -- simulating escrow creation");
     return { txId: "offline-tx-create-" + Date.now(), jobId: 1 };
   }
 
   const account = await deriveAccount(config.agentA.mnemonic);
 
+  const assetInfo = createAssetInfo(
+    config.token.address,
+    config.token.name,
+    "mock-sbtc"
+  );
+
   const postConditions = [
-    makeStandardSTXPostCondition(
+    makeStandardFungiblePostCondition(
       config.agentA.address,
       FungibleConditionCode.Equal,
-      amountUstx
+      amount,
+      assetInfo
     ),
   ];
 
   const txOptions = {
     contractAddress: config.contract.address,
-    contractName: config.contract.name,
+    contractName: "agentpay-escrow",
     functionName: "create-escrow",
     functionArgs: [
       standardPrincipalCV(agentBAddress),
-      uintCV(amountUstx),
+      uintCV(amount),
       bufferCV(Buffer.from(agentBPublicKeyHex, "hex")),
       bufferCV(Buffer.from(requestHashHex, "hex")),
+      contractPrincipalCV(config.token.address, config.token.name),
     ],
     senderKey: account.stxPrivateKey,
     network: config.network,
@@ -81,37 +92,45 @@ export async function createEscrow(
   return { txId: broadcastResponse.txid, jobId };
 }
 
-// Agent B claims payment after delivering the service.
+// Agent B claims payment after delivering the service (SIP-010 token transfer).
 export async function completeEscrow(
   jobId: number,
   resultHashHex: string,
   signatureHex: string,
-  expectedAmountUstx: number
+  expectedAmount: number
 ): Promise<string> {
   if (isOfflineDemo) {
-    console.log("[Paygent] OFFLINE MODE — simulating escrow completion");
+    console.log("[Paygent] OFFLINE MODE -- simulating escrow completion");
     return "offline-tx-complete-" + Date.now();
   }
 
   const account = await deriveAccount(config.agentB.mnemonic);
 
+  const assetInfo = createAssetInfo(
+    config.token.address,
+    config.token.name,
+    "mock-sbtc"
+  );
+
   const postConditions = [
-    makeContractSTXPostCondition(
+    makeContractFungiblePostCondition(
       config.contract.address,
-      config.contract.name,
+      "agentpay-escrow",
       FungibleConditionCode.Equal,
-      expectedAmountUstx
+      expectedAmount,
+      assetInfo
     ),
   ];
 
   const txOptions = {
     contractAddress: config.contract.address,
-    contractName: config.contract.name,
+    contractName: "agentpay-escrow",
     functionName: "complete-escrow",
     functionArgs: [
       uintCV(jobId),
       bufferCV(Buffer.from(resultHashHex, "hex")),
       bufferCV(Buffer.from(signatureHex, "hex")),
+      contractPrincipalCV(config.token.address, config.token.name),
     ],
     senderKey: account.stxPrivateKey,
     network: config.network,
@@ -138,7 +157,7 @@ export async function getEscrow(jobId: number): Promise<EscrowJob | null> {
       jobId,
       requester: config.agentA.address,
       provider: config.agentB.address,
-      amountUstx: config.paymentUstx,
+      amountUstx: config.paymentAmount,
       status: "pending",
       requestHash: "0".repeat(64),
       resultHash: "0".repeat(64),
@@ -148,7 +167,7 @@ export async function getEscrow(jobId: number): Promise<EscrowJob | null> {
 
   const result = await callReadOnlyFunction({
     contractAddress: config.contract.address,
-    contractName: config.contract.name,
+    contractName: "agentpay-escrow",
     functionName: "get-escrow",
     functionArgs: [uintCV(jobId)],
     senderAddress: config.agentA.address,
@@ -156,7 +175,7 @@ export async function getEscrow(jobId: number): Promise<EscrowJob | null> {
   });
 
   // cvToValue returns: { value: { value: { field: { value: ... } } } }
-  // (response (optional (tuple ...))) — need to unwrap response then optional
+  // (response (optional (tuple ...))) -- need to unwrap response then optional
   const outer = cvToValue(result);
   if (!outer?.value?.value) return null;
 
@@ -165,7 +184,7 @@ export async function getEscrow(jobId: number): Promise<EscrowJob | null> {
     jobId,
     requester: escrow.requester.value,
     provider: escrow.provider.value,
-    amountUstx: Number(escrow["amount-ustx"].value),
+    amountUstx: Number(escrow.amount.value),
     status: escrow.status.value,
     requestHash: String(escrow["request-hash"].value).replace(/^0x/, ""),
     resultHash: String(escrow["result-hash"].value).replace(/^0x/, ""),
@@ -200,7 +219,7 @@ async function pollForJobId(txId: string): Promise<number> {
         console.log("[Paygent] Tx confirmed but couldn't parse job ID from result, reading job counter...");
         const result = await callReadOnlyFunction({
           contractAddress: config.contract.address,
-          contractName: config.contract.name,
+          contractName: "agentpay-escrow",
           functionName: "get-job-count",
           functionArgs: [],
           senderAddress: config.agentA.address,
@@ -210,7 +229,7 @@ async function pollForJobId(txId: string): Promise<number> {
       }
 
       if (tx.tx_status === "abort_by_response" || tx.tx_status === "abort_by_post_condition") {
-        throw new Error(`Transaction failed: ${tx.tx_status} — ${tx.tx_result?.repr}`);
+        throw new Error(`Transaction failed: ${tx.tx_status} -- ${tx.tx_result?.repr}`);
       }
 
       console.log(`[Paygent] Waiting for confirmation... (${attempt * 5}s)`);

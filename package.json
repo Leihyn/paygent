@@ -1,5 +1,5 @@
 {
-  "name": "agentpay",
+  "name": "paygent",
   "version": "1.0.0",
   "description": "Paygent: Bitcoin-native machine-to-machine payment layer for AI agents using Stacks",
   "main": "dist/demo/run.js",
@@ -7,7 +7,6 @@
     "start": "ts-node src/demo/server.ts",
     "build": "tsc",
     "deploy": "ts-node src/contract/deploy.ts",
-    "deploy:v3": "ts-node src/contract/deploy-v3.ts",
     "demo": "ts-node src/demo/run.ts",
     "demo:offline": "OFFLINE_DEMO=true ts-node src/demo/run.ts",
     "agent-b": "ts-node src/agents/agentB.ts",

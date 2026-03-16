@@ -8,7 +8,6 @@ import express, { Request, Response } from "express";
 import path from "path";
 import { config, isOfflineDemo } from "../config";
 import { createEscrow, completeEscrow, getEscrow } from "../contract/escrow";
-import { createEscrowV3, completeEscrowV3, getEscrowV3 } from "../contract/escrow-v3";
 import { fetchAllYields, generateReasoning } from "../yield/fetcher";
 import { signPayload, hashPayload } from "../contract/verify";
 import {
@@ -230,60 +229,24 @@ function pause(ms: number): Promise<void> {
   return new Promise((r) => setTimeout(r, ms));
 }
 
-// ─── SSE endpoint: live demo ───
-app.get("/api/demo", (req: Request, res: Response) => {
+// ─── Shared SSE handler ───
+function handleDemoSSE(
+  req: Request,
+  res: Response,
+  flow: (offline: boolean) => Promise<void>,
+  forceOffline?: boolean
+): void {
   if (demoRunning) {
     res.status(409).json({ error: "Demo in progress" });
     return;
   }
 
-  const forceOffline = req.query.offline === "true";
-  const offline = isOfflineDemo || forceOffline;
+  const offline = forceOffline ?? (isOfflineDemo || req.query.offline === "true");
 
   demoRunning = true;
   setupSSE(res);
 
-  const listener = (event: DemoEvent) => {
-    sendSSE(res, event);
-  };
-
-  demoEvents.on("demo-event", listener);
-
-  // Clean up on client disconnect
-  req.on("close", () => {
-    demoEvents.removeListener("demo-event", listener);
-    demoRunning = false;
-  });
-
-  // Run the demo
-  runDemoFlow(offline)
-    .catch((err) => {
-      emitDemoError(err.message || String(err));
-    })
-    .finally(() => {
-      // Small delay to ensure final events are flushed
-      setTimeout(() => {
-        demoEvents.removeListener("demo-event", listener);
-        demoRunning = false;
-        res.end();
-      }, 500);
-    });
-});
-
-// ─── SSE endpoint: offline shortcut ───
-app.get("/api/demo/offline", (req: Request, res: Response) => {
-  if (demoRunning) {
-    res.status(409).json({ error: "Demo in progress" });
-    return;
-  }
-
-  demoRunning = true;
-  setupSSE(res);
-
-  const listener = (event: DemoEvent) => {
-    sendSSE(res, event);
-  };
-
+  const listener = (event: DemoEvent) => sendSSE(res, event);
   demoEvents.on("demo-event", listener);
 
   req.on("close", () => {
@@ -291,10 +254,8 @@ app.get("/api/demo/offline", (req: Request, res: Response) => {
     demoRunning = false;
   });
 
-  runDemoFlow(true)
-    .catch((err) => {
-      emitDemoError(err.message || String(err));
-    })
+  flow(offline)
+    .catch((err) => emitDemoError(err.message || String(err)))
     .finally(() => {
       setTimeout(() => {
         demoEvents.removeListener("demo-event", listener);
@@ -302,7 +263,11 @@ app.get("/api/demo/offline", (req: Request, res: Response) => {
         res.end();
       }, 500);
     });
-});
+}
+
+// ─── SSE endpoints: standard demo ───
+app.get("/api/demo", (req, res) => handleDemoSSE(req, res, runDemoFlow));
+app.get("/api/demo/offline", (req, res) => handleDemoSSE(req, res, runDemoFlow, true));
 
 // ─── x402 Demo flow (SIP-010 escrow + HTTP 402 protocol) ───
 async function runX402DemoFlow(offline: boolean): Promise<void> {
@@ -345,10 +310,10 @@ async function runX402DemoFlow(offline: boolean): Promise<void> {
 
   if (offline) {
     await pause(400);
-    txId = "offline-tx-create-v3-" + Date.now();
+    txId = "offline-tx-create-" + Date.now();
     jobId = 1;
   } else {
-    const escrowResult = await createEscrowV3(
+    const escrowResult = await createEscrow(
       config.agentB.address,
       config.agentB.publicKey,
       config.paymentAmount,
@@ -393,8 +358,8 @@ async function runX402DemoFlow(offline: boolean): Promise<void> {
       createdAt: 0,
     };
   } else {
-    escrow = await getEscrowV3(jobId);
-    if (!escrow) throw new Error(`v3 Escrow #${jobId} not found on-chain`);
+    escrow = await getEscrow(jobId);
+    if (!escrow) throw new Error(`Escrow #${jobId} not found on-chain`);
   }
 
   emitLog("AGENT_B", `Escrow verified: ${escrow.amountUstx} msBTC locked`);
@@ -453,9 +418,9 @@ async function runX402DemoFlow(offline: boolean): Promise<void> {
   let completeTxId: string;
   if (offline) {
     await pause(400);
-    completeTxId = "offline-tx-complete-v3-" + Date.now();
+    completeTxId = "offline-tx-complete-" + Date.now();
   } else {
-    completeTxId = await completeEscrowV3(
+    completeTxId = await completeEscrow(
       jobId,
       resultHashHex,
       signatureHex,
@@ -479,76 +444,9 @@ async function runX402DemoFlow(offline: boolean): Promise<void> {
   emitDemoComplete(duration);
 }
 
-// ─── SSE endpoint: x402 demo ───
-app.get("/api/demo-x402", (req: Request, res: Response) => {
-  if (demoRunning) {
-    res.status(409).json({ error: "Demo in progress" });
-    return;
-  }
-
-  const forceOffline = req.query.offline === "true";
-  const offline = isOfflineDemo || forceOffline;
-
-  demoRunning = true;
-  setupSSE(res);
-
-  const listener = (event: DemoEvent) => {
-    sendSSE(res, event);
-  };
-
-  demoEvents.on("demo-event", listener);
-
-  req.on("close", () => {
-    demoEvents.removeListener("demo-event", listener);
-    demoRunning = false;
-  });
-
-  runX402DemoFlow(offline)
-    .catch((err) => {
-      emitDemoError(err.message || String(err));
-    })
-    .finally(() => {
-      setTimeout(() => {
-        demoEvents.removeListener("demo-event", listener);
-        demoRunning = false;
-        res.end();
-      }, 500);
-    });
-});
-
-// ─── SSE endpoint: x402 offline shortcut ───
-app.get("/api/demo-x402/offline", (req: Request, res: Response) => {
-  if (demoRunning) {
-    res.status(409).json({ error: "Demo in progress" });
-    return;
-  }
-
-  demoRunning = true;
-  setupSSE(res);
-
-  const listener = (event: DemoEvent) => {
-    sendSSE(res, event);
-  };
-
-  demoEvents.on("demo-event", listener);
-
-  req.on("close", () => {
-    demoEvents.removeListener("demo-event", listener);
-    demoRunning = false;
-  });
-
-  runX402DemoFlow(true)
-    .catch((err) => {
-      emitDemoError(err.message || String(err));
-    })
-    .finally(() => {
-      setTimeout(() => {
-        demoEvents.removeListener("demo-event", listener);
-        demoRunning = false;
-        res.end();
-      }, 500);
-    });
-});
+// ─── SSE endpoints: x402 demo ───
+app.get("/api/demo-x402", (req, res) => handleDemoSSE(req, res, runX402DemoFlow));
+app.get("/api/demo-x402/offline", (req, res) => handleDemoSSE(req, res, runX402DemoFlow, true));
 
 // ─── Fallback: serve index.html for SPA routes ───
 app.get("*", (_req, res) => {
