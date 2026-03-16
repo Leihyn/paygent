@@ -1,0 +1,10 @@
+node_modules/
+dist/
+.env
+*.js.map
+*.mp4
+video/node_modules/
+video/out/
+
+.DS_Store
+.claude/

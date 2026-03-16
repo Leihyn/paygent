@@ -1,0 +1,1108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AgentPay -- Settlement Report #001</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Source+Serif+4:ital,opsz,wght@0,8..60,300;0,8..60,400;0,8..60,600;1,8..60,400&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  --bg: #0c0c0c;
+  --panel-right: #111111;
+  --text-primary: #e8e8e3;
+  --text-secondary: #8a8a80;
+  --accent: #c9a227;
+  --accent-dim: rgba(201, 162, 39, 0.15);
+  --accent-mid: rgba(201, 162, 39, 0.4);
+  --success: #4ade80;
+  --danger: #f87171;
+  --serif-display: 'Playfair Display', Georgia, 'Times New Roman', serif;
+  --serif-body: 'Source Serif 4', Georgia, serif;
+  --mono: 'IBM Plex Mono', 'Courier New', monospace;
+}
+
+html {
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text-primary);
+  font-family: var(--serif-body);
+  font-weight: 400;
+  line-height: 1.7;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ─── Tabular nums everywhere ─── */
+body {
+  font-variant-numeric: tabular-nums;
+}
+
+/* ─── Focus indicators ─── */
+*:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
+button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
+/* ─── Wordmark ─── */
+.wordmark {
+  position: fixed;
+  top: 28px;
+  left: 32px;
+  z-index: 100;
+  font-family: var(--serif-display);
+  font-style: italic;
+  font-weight: 600;
+  font-size: 1.15rem;
+  color: var(--text-primary);
+  letter-spacing: 0.02em;
+  text-decoration: none;
+  cursor: default;
+  user-select: none;
+}
+
+/* ─── DNA Badge ─── */
+.dna-badge {
+  position: fixed;
+  top: 30px;
+  right: 72px;
+  z-index: 100;
+  font-family: var(--mono);
+  font-size: 0.6rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  letter-spacing: 0.08em;
+  opacity: 0.6;
+}
+
+/* ─── Info Button ─── */
+.info-btn {
+  position: fixed;
+  top: 24px;
+  right: 32px;
+  z-index: 100;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 1px solid var(--accent-dim);
+  background: transparent;
+  color: var(--text-secondary);
+  font-family: var(--serif-display);
+  font-style: italic;
+  font-size: 1rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: border-color 0.3s ease, color 0.3s ease;
+}
+
+.info-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* ─── Overlay ─── */
+.overlay-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  z-index: 200;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.4s ease;
+}
+
+.overlay-backdrop.active {
+  opacity: 1;
+  pointer-events: all;
+}
+
+.overlay-panel {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: min(480px, 90vw);
+  background: #0e0e0e;
+  border-left: 1px solid var(--accent-dim);
+  z-index: 201;
+  padding: 48px 40px;
+  transform: translateX(100%);
+  transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+  overflow-y: auto;
+}
+
+.overlay-backdrop.active .overlay-panel {
+  transform: translateX(0);
+}
+
+.overlay-close {
+  position: absolute;
+  top: 20px;
+  right: 24px;
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  font-family: var(--mono);
+  font-size: 1.2rem;
+  cursor: pointer;
+  padding: 4px 8px;
+  transition: color 0.3s ease;
+}
+
+.overlay-close:hover {
+  color: var(--text-primary);
+}
+
+.overlay-panel h2 {
+  font-family: var(--serif-display);
+  font-weight: 600;
+  font-size: 1.6rem;
+  color: var(--text-primary);
+  margin-bottom: 24px;
+  letter-spacing: -0.01em;
+}
+
+.overlay-panel p {
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+  line-height: 1.8;
+  margin-bottom: 16px;
+}
+
+.overlay-panel .overlay-label {
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  color: var(--accent);
+  text-transform: uppercase;
+  margin-bottom: 8px;
+  margin-top: 28px;
+}
+
+.overlay-panel code {
+  font-family: var(--mono);
+  font-size: 0.85rem;
+  color: var(--accent);
+}
+
+/* ─── Main Layout ─── */
+.main-layout {
+  display: flex;
+  min-height: 100vh;
+  position: relative;
+}
+
+.panel-left {
+  width: 55%;
+  padding: 100px 48px 60px 48px;
+  position: relative;
+}
+
+.panel-divider {
+  width: 1px;
+  background: var(--accent-dim);
+  flex-shrink: 0;
+}
+
+.panel-right {
+  width: 45%;
+  background: var(--panel-right);
+  padding: 100px 40px 60px 40px;
+  position: relative;
+}
+
+/* ─── Hero: Left Panel ─── */
+.hero-left .report-title {
+  font-family: var(--serif-display);
+  font-weight: 700;
+  font-size: clamp(2rem, 4vw, 3.2rem);
+  line-height: 1.15;
+  color: var(--text-primary);
+  letter-spacing: -0.02em;
+  margin-bottom: 4px;
+}
+
+.hero-left .report-subtitle {
+  font-family: var(--serif-display);
+  font-weight: 400;
+  font-style: italic;
+  font-size: clamp(1rem, 2vw, 1.4rem);
+  color: var(--accent);
+  margin-bottom: 32px;
+  letter-spacing: 0.01em;
+}
+
+.hero-meta {
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  line-height: 2;
+  margin-bottom: 40px;
+  letter-spacing: 0.03em;
+}
+
+.hero-meta span.label {
+  display: inline-block;
+  width: 100px;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-size: 0.65rem;
+}
+
+.hero-meta span.value {
+  color: var(--text-primary);
+}
+
+/* ─── Execute Button ─── */
+.btn-execute {
+  display: inline-block;
+  padding: 16px 40px;
+  background: transparent;
+  border: 1px solid var(--accent);
+  color: var(--accent);
+  font-family: var(--mono);
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background 0.3s ease, color 0.3s ease;
+  position: relative;
+}
+
+.btn-execute:hover {
+  background: var(--accent);
+  color: var(--bg);
+}
+
+.btn-execute:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.btn-execute:disabled:hover {
+  background: transparent;
+  color: var(--accent);
+}
+
+/* ─── Narrative Log ─── */
+.narrative-log {
+  margin-top: 56px;
+  border-top: 1px solid var(--accent-dim);
+  padding-top: 40px;
+}
+
+.narrative-entry {
+  margin-bottom: 40px;
+  opacity: 0;
+  transform: translateY(12px);
+  animation: fadeEntry 0.6s ease forwards;
+}
+
+@keyframes fadeEntry {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .narrative-entry {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.narrative-entry .section-marker {
+  font-family: var(--serif-display);
+  font-weight: 600;
+  font-size: 1.15rem;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+  letter-spacing: -0.01em;
+}
+
+.narrative-entry .section-marker .section-num {
+  color: var(--accent);
+}
+
+.narrative-entry .entry-time {
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  color: var(--text-secondary);
+  letter-spacing: 0.06em;
+  margin-bottom: 14px;
+}
+
+.narrative-entry .entry-body {
+  font-family: var(--serif-body);
+  font-size: 0.95rem;
+  color: var(--text-secondary);
+  line-height: 1.8;
+}
+
+.narrative-entry .entry-body strong {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.narrative-entry .entry-hash {
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  color: var(--accent-mid);
+  margin-top: 10px;
+  word-break: break-all;
+  line-height: 1.6;
+}
+
+.narrative-entry .entry-hash .hash-label {
+  color: var(--text-secondary);
+  font-size: 0.65rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  display: block;
+  margin-bottom: 2px;
+}
+
+.check-mark {
+  color: var(--success);
+}
+
+.cross-mark {
+  color: var(--danger);
+}
+
+/* ─── Right Panel: Data Sections ─── */
+.data-section {
+  margin-bottom: 40px;
+  opacity: 0;
+  transform: translateY(8px);
+  animation: fadeEntry 0.5s ease forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .data-section {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.data-section-title {
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 6px;
+}
+
+.data-section-rule {
+  border: none;
+  border-top: 1px solid var(--accent-dim);
+  margin-bottom: 16px;
+}
+
+.data-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding: 6px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.03);
+  font-family: var(--mono);
+  font-size: 0.8rem;
+}
+
+.data-row .data-label {
+  color: var(--text-secondary);
+  font-size: 0.7rem;
+  letter-spacing: 0.06em;
+  flex-shrink: 0;
+  min-width: 100px;
+}
+
+.data-row .data-value {
+  color: var(--text-primary);
+  text-align: right;
+  word-break: break-all;
+}
+
+.data-row .data-value.pending {
+  color: var(--accent);
+}
+
+.data-row .data-value.completed {
+  color: var(--success);
+}
+
+.status-dot {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  margin-right: 6px;
+  vertical-align: middle;
+  position: relative;
+  top: -1px;
+}
+
+.status-dot.pending {
+  background: var(--accent);
+}
+
+.status-dot.completed {
+  background: var(--success);
+}
+
+.status-dot.awaiting {
+  background: var(--text-secondary);
+}
+
+/* ─── Yield Table ─── */
+.yield-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  margin-top: 8px;
+}
+
+.yield-table thead th {
+  text-align: left;
+  padding: 8px 8px 8px 0;
+  color: var(--accent);
+  font-weight: 600;
+  font-size: 0.65rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  border-bottom: 1px solid var(--accent-dim);
+}
+
+.yield-table thead th:last-child {
+  text-align: right;
+}
+
+.yield-table tbody td {
+  padding: 8px 8px 8px 0;
+  color: var(--text-secondary);
+  border-bottom: 1px solid rgba(255,255,255,0.03);
+}
+
+.yield-table tbody td:last-child {
+  text-align: right;
+}
+
+.yield-table tbody td.protocol-name {
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.yield-table tbody td.apy {
+  color: var(--success);
+  font-weight: 500;
+}
+
+.yield-table tbody td.risk-med {
+  color: var(--accent);
+}
+
+.yield-table tbody td.risk-low {
+  color: var(--success);
+}
+
+/* ─── Settlement Conclusion ─── */
+.settlement-conclusion {
+  border-top: 1px solid var(--accent);
+  margin-top: 40px;
+  padding-top: 28px;
+}
+
+.settlement-conclusion p {
+  font-family: var(--serif-body);
+  font-style: italic;
+  font-size: 0.92rem;
+  color: var(--text-secondary);
+  line-height: 1.85;
+}
+
+/* ─── Footer ─── */
+footer {
+  border-top: 1px solid var(--accent-dim);
+  padding: 24px 0;
+  margin-top: 48px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-family: var(--mono);
+  font-size: 0.65rem;
+  color: var(--text-secondary);
+  letter-spacing: 0.06em;
+}
+
+footer .footer-left {
+  opacity: 0.6;
+}
+
+footer .footer-right {
+  opacity: 0.4;
+  text-align: right;
+}
+
+/* ─── Right panel initial state ─── */
+.right-content {
+  min-height: 60vh;
+}
+
+.right-placeholder {
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  opacity: 0.4;
+  margin-top: 40px;
+  line-height: 2;
+  letter-spacing: 0.04em;
+}
+
+/* ─── Mobile ─── */
+@media (max-width: 900px) {
+  .main-layout {
+    flex-direction: column;
+  }
+
+  .panel-left,
+  .panel-right {
+    width: 100%;
+  }
+
+  .panel-left {
+    padding: 90px 24px 40px 24px;
+  }
+
+  .panel-right {
+    padding: 40px 24px 40px 24px;
+  }
+
+  .panel-divider {
+    width: 100%;
+    height: 1px;
+  }
+
+  .wordmark {
+    top: 20px;
+    left: 20px;
+    font-size: 1rem;
+  }
+
+  .info-btn {
+    top: 16px;
+    right: 20px;
+  }
+
+  .dna-badge {
+    top: 22px;
+    right: 60px;
+    font-size: 0.5rem;
+  }
+}
+
+@media (max-width: 600px) {
+  .hero-left .report-title {
+    font-size: 1.75rem;
+  }
+
+  .hero-left .report-subtitle {
+    font-size: 1rem;
+  }
+
+  .btn-execute {
+    padding: 14px 28px;
+    font-size: 0.72rem;
+    width: 100%;
+    text-align: center;
+  }
+
+  .yield-table {
+    font-size: 0.65rem;
+  }
+}
+</style>
+</head>
+<body>
+
+<!-- Wordmark -->
+<span class="wordmark" aria-label="AgentPay">AgentPay</span>
+
+<!-- DNA Badge -->
+<span class="dna-badge" aria-hidden="true">DNA-A-O-S-N-E</span>
+
+<!-- Info Button -->
+<button class="info-btn" aria-label="About AgentPay" id="infoBtn" type="button">i</button>
+
+<!-- Overlay -->
+<div class="overlay-backdrop" id="overlay" role="dialog" aria-modal="true" aria-label="About AgentPay">
+  <aside class="overlay-panel">
+    <button class="overlay-close" id="overlayClose" aria-label="Close" type="button">&times;</button>
+    <h2>About AgentPay</h2>
+    <p>
+      AgentPay is a trustless payment protocol enabling AI agents to transact
+      autonomously on the Stacks blockchain, secured by Bitcoin finality.
+    </p>
+    <p>
+      Agents negotiate, escrow funds, deliver services, and settle payments
+      without human intervention. Every step is verifiable on-chain through
+      Clarity smart contracts and cryptographic proofs.
+    </p>
+    <div class="overlay-label">How It Works</div>
+    <p>
+      Agent A locks funds in a Clarity escrow contract. Agent B verifies the
+      escrow, performs the requested service, and submits a cryptographic proof
+      of delivery. The contract releases funds only after on-chain verification
+      of the provider's secp256k1 signature.
+    </p>
+    <div class="overlay-label">Contract</div>
+    <p><code>ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM.agentpay-escrow-v1</code></p>
+    <div class="overlay-label">Network</div>
+    <p>Stacks Testnet (anchored to Bitcoin)</p>
+    <div class="overlay-label">Built For</div>
+    <p>Stacks Hackathon 2026</p>
+  </aside>
+</div>
+
+<!-- Main Layout -->
+<main class="main-layout">
+  <!-- Left Panel -->
+  <article class="panel-left">
+    <header class="hero-left">
+      <h1 class="report-title">Settlement Report</h1>
+      <p class="report-subtitle">Agent-to-Agent Payment #001</p>
+
+      <div class="hero-meta">
+        <div><span class="label">Date</span> <span class="value">14 Mar 2026</span></div>
+        <div><span class="label">Network</span> <span class="value">Stacks Testnet</span></div>
+        <div><span class="label">Contract</span> <span class="value">ST1PQ...PGZGM.agentpay-escrow-v1</span></div>
+        <div><span class="label">Protocol</span> <span class="value">AgentPay v1.0</span></div>
+      </div>
+
+      <button class="btn-execute" id="executeBtn" type="button">Execute Settlement</button>
+    </header>
+
+    <section class="narrative-log" id="narrativeLog" aria-live="polite" aria-label="Settlement narrative">
+      <!-- Entries injected by JS -->
+    </section>
+
+    <div class="settlement-conclusion" id="conclusion" style="display:none;" aria-live="polite">
+      <p>
+        This settlement was executed autonomously by two AI agents
+        with no human intervention. Payment was verified on-chain
+        via Clarity's <code style="font-family:var(--mono);color:var(--accent);font-size:0.88rem;">secp256k1-verify</code> function on the Stacks blockchain,
+        anchored to Bitcoin for final settlement.
+      </p>
+    </div>
+
+    <footer>
+      <div class="footer-left">AgentPay &mdash; Stacks Hackathon 2026</div>
+      <div class="footer-right">DNA-A-O-S-N-E &middot; Ledger concept &middot; Newspaper/Koinly</div>
+    </footer>
+  </article>
+
+  <!-- Divider -->
+  <div class="panel-divider" aria-hidden="true"></div>
+
+  <!-- Right Panel -->
+  <aside class="panel-right">
+    <div class="right-content" id="rightContent">
+      <!-- Escrow Status: always visible -->
+      <section class="data-section" id="escrowSection" style="opacity:1;transform:none;">
+        <div class="data-section-title">Escrow Status</div>
+        <hr class="data-section-rule">
+        <div class="data-row">
+          <span class="data-label">Job ID</span>
+          <span class="data-value" id="dataJobId">&mdash;</span>
+        </div>
+        <div class="data-row">
+          <span class="data-label">Amount</span>
+          <span class="data-value" id="dataAmount">50 &micro;STX</span>
+        </div>
+        <div class="data-row">
+          <span class="data-label">Status</span>
+          <span class="data-value" id="dataStatus"><span class="status-dot awaiting"></span>AWAITING EXECUTION</span>
+        </div>
+        <div class="data-row">
+          <span class="data-label">Requester</span>
+          <span class="data-value" id="dataRequester">ST2V4Q...JPEJ</span>
+        </div>
+        <div class="data-row">
+          <span class="data-label">Provider</span>
+          <span class="data-value" id="dataProvider">ST4DPQ...XJ6C</span>
+        </div>
+        <div class="data-row" id="dataBlockRow" style="display:none;">
+          <span class="data-label">Created</span>
+          <span class="data-value" id="dataBlock">&mdash;</span>
+        </div>
+      </section>
+
+      <!-- Transaction section (appears on step 1) -->
+      <section class="data-section" id="txSection" style="display:none;">
+        <div class="data-section-title">Transaction</div>
+        <hr class="data-section-rule">
+        <div class="data-row">
+          <span class="data-label">Tx Hash</span>
+          <span class="data-value" id="dataTxHash">&mdash;</span>
+        </div>
+        <div class="data-row">
+          <span class="data-label">Block</span>
+          <span class="data-value" id="dataTxBlock">&mdash;</span>
+        </div>
+        <div class="data-row">
+          <span class="data-label">Confirmations</span>
+          <span class="data-value" id="dataTxConf">&mdash;</span>
+        </div>
+      </section>
+
+      <!-- Yield table (appears on step 4) -->
+      <section class="data-section" id="yieldSection" style="display:none;">
+        <div class="data-section-title">Yield Comparison</div>
+        <hr class="data-section-rule">
+        <table class="yield-table">
+          <thead>
+            <tr>
+              <th>Protocol</th>
+              <th>Asset</th>
+              <th>APY</th>
+              <th>TVL</th>
+              <th>Risk</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="protocol-name">Bitflow</td>
+              <td>sBTC-STX LP</td>
+              <td class="apy">13.40%</td>
+              <td>$2.1M</td>
+              <td class="risk-med">MED</td>
+            </tr>
+            <tr>
+              <td class="protocol-name">StackingDAO</td>
+              <td>STX &rarr; stSTX</td>
+              <td class="apy">8.90%</td>
+              <td>$18.0M</td>
+              <td class="risk-low">LOW</td>
+            </tr>
+            <tr>
+              <td class="protocol-name">Zest Protocol</td>
+              <td>sBTC</td>
+              <td class="apy">7.20%</td>
+              <td>$4.2M</td>
+              <td class="risk-low">LOW</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <!-- Cryptographic Proof (appears on step 5-6) -->
+      <section class="data-section" id="proofSection" style="display:none;">
+        <div class="data-section-title">Settlement Proof</div>
+        <hr class="data-section-rule">
+        <div class="data-row">
+          <span class="data-label">Algorithm</span>
+          <span class="data-value">secp256k1</span>
+        </div>
+        <div class="data-row">
+          <span class="data-label">Hash</span>
+          <span class="data-value" style="font-size:0.72rem;">3d8caf91b7e204a...e110b</span>
+        </div>
+        <div class="data-row">
+          <span class="data-label">Signature</span>
+          <span class="data-value" style="font-size:0.72rem;">01fcfc8e3a41d...52bd</span>
+        </div>
+        <div class="data-row">
+          <span class="data-label">Public Key</span>
+          <span class="data-value" style="font-size:0.72rem;">025441c3b7e...f10b</span>
+        </div>
+        <div class="data-row" id="proofStatusRow">
+          <span class="data-label">Status</span>
+          <span class="data-value" id="proofStatus"><span class="status-dot pending"></span>VERIFYING</span>
+        </div>
+      </section>
+
+      <!-- Placeholder when idle -->
+      <div class="right-placeholder" id="rightPlaceholder">
+        Awaiting settlement execution.<br>
+        Contract state will update in real time.<br><br>
+        Press [Execute Settlement] to begin.
+      </div>
+    </div>
+  </aside>
+</main>
+
+<script>
+(function() {
+  'use strict';
+
+  // ─── Overlay ───
+  var infoBtn = document.getElementById('infoBtn');
+  var overlay = document.getElementById('overlay');
+  var overlayClose = document.getElementById('overlayClose');
+
+  function openOverlay() {
+    overlay.classList.add('active');
+    overlayClose.focus();
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeOverlay() {
+    overlay.classList.remove('active');
+    infoBtn.focus();
+    document.body.style.overflow = '';
+  }
+
+  infoBtn.addEventListener('click', openOverlay);
+  overlayClose.addEventListener('click', closeOverlay);
+  overlay.addEventListener('click', function(e) {
+    if (e.target === overlay) closeOverlay();
+  });
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape' && overlay.classList.contains('active')) {
+      closeOverlay();
+    }
+  });
+
+  // ─── Demo State ───
+  var executeBtn = document.getElementById('executeBtn');
+  var narrativeLog = document.getElementById('narrativeLog');
+  var running = false;
+
+  // Prefab narrative entries
+  var steps = [
+    {
+      num: 1,
+      title: 'Escrow Creation',
+      time: '14 Mar 2026, 15:42:03 UTC',
+      body: 'Agent A (<strong>ST2V4Q...JPEJ</strong>) initiated escrow of <strong>50 &micro;STX</strong> on Stacks testnet. Funds locked in Clarity contract pending delivery verification.',
+      hash: '<span class="hash-label">Transaction</span>0xc5b28c4e7f1a2d3b8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b...a5a8',
+      hashExtra: '<span class="hash-label">Block</span>152,046'
+    },
+    {
+      num: 2,
+      title: 'Service Request',
+      time: '14 Mar 2026, 15:42:18 UTC',
+      body: 'Request dispatched to Agent B: <em>"Where should I deposit my idle sBTC for the best risk-adjusted yield on Stacks?"</em>',
+      hash: '<span class="hash-label">Request Hash (on-chain)</span>8f99bdbd4a3c2e1d0f9e8d7c6b5a4938271605f4e3d2c1b0a9f8e7d6c5b4...47664'
+    },
+    {
+      num: 3,
+      title: 'Escrow Verification',
+      time: '14 Mar 2026, 15:42:24 UTC',
+      body: 'Agent B verified escrow parameters against contract state:<br><br><span class="check-mark">&#10003;</span>&nbsp; Status: pending<br><span class="check-mark">&#10003;</span>&nbsp; Provider: matches Agent B address<br><span class="check-mark">&#10003;</span>&nbsp; Amount: 50 &micro;STX (meets minimum threshold)'
+    },
+    {
+      num: 4,
+      title: 'Yield Intelligence',
+      time: '14 Mar 2026, 15:42:31 UTC',
+      body: 'Agent B queried <strong>3 Stacks DeFi protocols</strong> for current yield opportunities on sBTC and STX. Results compiled with risk assessment and TVL analysis.',
+      hash: '<span class="hash-label">Data Sources</span>Bitflow AMM &middot; StackingDAO &middot; Zest Protocol'
+    },
+    {
+      num: 5,
+      title: 'Response Delivery',
+      time: '14 Mar 2026, 15:42:38 UTC',
+      body: 'Agent B submitted yield analysis with recommendation: <strong>Bitflow sBTC-STX LP at 13.40% APY</strong> offers the highest return, though StackingDAO\'s 8.90% provides better risk-adjusted yield for conservative allocations.',
+      hash: '<span class="hash-label">Response Hash</span>7c2e9f1a8b3d4e5f6071829304a5b6c7d8e9f0a1b2c3d4e5f67890ab...cd12'
+    },
+    {
+      num: 6,
+      title: 'Cryptographic Verification',
+      time: '14 Mar 2026, 15:42:44 UTC',
+      body: 'Clarity contract executed <code style="font-family:var(--mono);color:var(--accent);font-size:0.88rem;">secp256k1-verify</code> against Agent B\'s signature. Hash of delivered content matches committed request hash. Proof of delivery confirmed on-chain.',
+      hash: '<span class="hash-label">Verification Tx</span>0x9a8b7c6d5e4f3a2b1c0d9e8f7a6b5c4d3e2f1a0b9c8d7e6f5a4b3c2d1e0f...8e3a'
+    },
+    {
+      num: 7,
+      title: 'Settlement Complete',
+      time: '14 Mar 2026, 15:42:48 UTC',
+      body: 'Escrow released. <strong>50 &micro;STX</strong> transferred from contract to Agent B (<strong>ST4DPQ...XJ6C</strong>). Settlement finalized in block <strong>152,049</strong>. Total execution time: <strong>45 seconds</strong>. Zero human intervention.',
+      hash: '<span class="hash-label">Settlement Tx</span>0xf1e2d3c4b5a6978869504132a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1...7b2c'
+    }
+  ];
+
+  // Right panel update functions
+  function updateEscrow(status, jobId, block) {
+    if (jobId !== undefined) {
+      document.getElementById('dataJobId').textContent = jobId;
+    }
+    if (status === 'pending') {
+      document.getElementById('dataStatus').innerHTML = '<span class="status-dot pending"></span>PENDING';
+    } else if (status === 'completed') {
+      document.getElementById('dataStatus').innerHTML = '<span class="status-dot completed"></span>COMPLETED';
+    }
+    if (block) {
+      var row = document.getElementById('dataBlockRow');
+      row.style.display = '';
+      document.getElementById('dataBlock').textContent = 'Block ' + block;
+    }
+  }
+
+  function showSection(id) {
+    var el = document.getElementById(id);
+    el.style.display = '';
+    // Force reflow for animation
+    void el.offsetWidth;
+  }
+
+  function showTx() {
+    showSection('txSection');
+    document.getElementById('dataTxHash').textContent = '0xc5b28c...a5a8';
+    document.getElementById('dataTxBlock').textContent = '152,046';
+    document.getElementById('dataTxConf').textContent = '1';
+  }
+
+  function updateConfirmations(n) {
+    document.getElementById('dataTxConf').textContent = String(n);
+  }
+
+  function verifyProof() {
+    document.getElementById('proofStatus').innerHTML = '<span class="status-dot completed"></span>VERIFIED <span class="check-mark">&#10003;</span>';
+  }
+
+  // ─── Reduced motion check ───
+  var prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  function addNarrative(step) {
+    var entry = document.createElement('div');
+    entry.className = 'narrative-entry';
+    if (prefersReducedMotion) {
+      entry.style.opacity = '1';
+      entry.style.transform = 'none';
+    }
+
+    var html = '<div class="section-marker"><span class="section-num">&sect;' + step.num + '.</span> ' + step.title.toUpperCase() + '</div>';
+    html += '<div class="entry-time">' + step.time + '</div>';
+    html += '<div class="entry-body">' + step.body + '</div>';
+    if (step.hash) {
+      html += '<div class="entry-hash">' + step.hash + '</div>';
+    }
+    if (step.hashExtra) {
+      html += '<div class="entry-hash">' + step.hashExtra + '</div>';
+    }
+
+    entry.innerHTML = html;
+    narrativeLog.appendChild(entry);
+
+    // Scroll into view smoothly
+    if (!prefersReducedMotion) {
+      entry.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+  }
+
+  // ─── Execute Demo ───
+  function runDemo() {
+    if (running) return;
+    running = true;
+    executeBtn.disabled = true;
+    executeBtn.textContent = 'EXECUTING...';
+
+    // Clear previous state
+    narrativeLog.innerHTML = '';
+    document.getElementById('conclusion').style.display = 'none';
+    document.getElementById('rightPlaceholder').style.display = 'none';
+    document.getElementById('txSection').style.display = 'none';
+    document.getElementById('yieldSection').style.display = 'none';
+    document.getElementById('proofSection').style.display = 'none';
+    document.getElementById('dataBlockRow').style.display = 'none';
+    document.getElementById('proofStatus').innerHTML = '<span class="status-dot pending"></span>VERIFYING';
+
+    // Reset escrow
+    document.getElementById('dataJobId').innerHTML = '&mdash;';
+    document.getElementById('dataStatus').innerHTML = '<span class="status-dot awaiting"></span>AWAITING EXECUTION';
+    document.getElementById('dataBlock').innerHTML = '&mdash;';
+
+    var delays = [300, 1400, 2800, 4200, 5800, 7200, 8600, 10000];
+
+    // Step 1: Escrow Creation
+    setTimeout(function() {
+      addNarrative(steps[0]);
+      updateEscrow('pending', 2, '152,046');
+      showTx();
+    }, delays[0]);
+
+    // Step 2: Service Request
+    setTimeout(function() {
+      addNarrative(steps[1]);
+      updateConfirmations(2);
+    }, delays[1]);
+
+    // Step 3: Escrow Verification
+    setTimeout(function() {
+      addNarrative(steps[2]);
+      updateConfirmations(3);
+    }, delays[2]);
+
+    // Step 4: Yield Intelligence
+    setTimeout(function() {
+      addNarrative(steps[3]);
+      showSection('yieldSection');
+      updateConfirmations(4);
+    }, delays[3]);
+
+    // Step 5: Response Delivery
+    setTimeout(function() {
+      addNarrative(steps[4]);
+      showSection('proofSection');
+      updateConfirmations(5);
+    }, delays[4]);
+
+    // Step 6: Crypto Verification
+    setTimeout(function() {
+      addNarrative(steps[5]);
+      verifyProof();
+      updateConfirmations(6);
+    }, delays[5]);
+
+    // Step 7: Settlement Complete
+    setTimeout(function() {
+      addNarrative(steps[6]);
+      updateEscrow('completed');
+      updateConfirmations(7);
+    }, delays[6]);
+
+    // Final
+    setTimeout(function() {
+      document.getElementById('conclusion').style.display = '';
+      executeBtn.disabled = false;
+      executeBtn.textContent = 'EXECUTE AGAIN';
+      running = false;
+
+      if (!prefersReducedMotion) {
+        document.getElementById('conclusion').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
+    }, delays[7]);
+  }
+
+  executeBtn.addEventListener('click', runDemo);
+})();
+</script>
+</body>
+</html>

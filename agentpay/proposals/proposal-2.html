@@ -1,0 +1,1271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AgentPay — Trustless AI Agent Payments</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  --bg: #09090b;
+  --surface: #18181b;
+  --primary: #f97316;
+  --secondary: #a1a1aa;
+  --success: #10b981;
+  --text-primary: #fafafa;
+  --text-secondary: #71717a;
+  --border: rgba(255,255,255,0.06);
+  --font-heading: 'Space Grotesk', sans-serif;
+  --font-body: 'DM Sans', sans-serif;
+  --font-mono: 'DM Mono', monospace;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+}
+
+/* Focus indicators */
+*:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px var(--primary);
+  border-radius: 4px;
+}
+
+button:focus-visible {
+  box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px var(--primary);
+}
+
+/* ─── NAV ─── */
+.nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  background: rgba(9,9,11,0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+}
+
+.nav-logo {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: 18px;
+  color: var(--text-primary);
+  letter-spacing: -0.02em;
+}
+
+.nav-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.network-pill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: 9999px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid var(--border);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.network-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--success);
+}
+
+.dna-badge {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text-secondary);
+  opacity: 0.5;
+  letter-spacing: 0.05em;
+}
+
+/* ─── HERO ─── */
+.hero {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 56px 24px 80px;
+  position: relative;
+}
+
+.hero-text {
+  text-align: center;
+  padding-top: 80px;
+  max-width: 720px;
+  margin: 0 auto 40px;
+}
+
+.hero-heading {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: clamp(32px, 5vw, 56px);
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+  color: var(--text-primary);
+  margin-bottom: 16px;
+}
+
+.hero-sub {
+  font-size: clamp(16px, 2vw, 20px);
+  color: var(--text-secondary);
+  font-weight: 400;
+  letter-spacing: -0.01em;
+}
+
+/* ─── RUN BUTTON ─── */
+.run-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-width: 180px;
+  min-height: 48px;
+  padding: 12px 32px;
+  border: none;
+  border-radius: 8px;
+  background: var(--primary);
+  color: #fff;
+  font-family: var(--font-body);
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.run-btn:hover {
+  background: #ea6c0e;
+}
+
+.run-btn:active {
+  background: #c2590c;
+}
+
+.run-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.run-btn .progress-bar {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 3px;
+  background: rgba(255,255,255,0.4);
+  border-radius: 0 0 8px 8px;
+  width: 0%;
+}
+
+.run-btn.running .progress-bar {
+  transition: width 10s linear;
+  width: 100%;
+}
+
+/* ─── FLOW DIAGRAM ─── */
+.flow-container {
+  width: 100%;
+  max-width: 800px;
+  margin: 40px auto 0;
+  position: relative;
+}
+
+.flow-diagram {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  position: relative;
+  padding: 40px 0;
+}
+
+.flow-svg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.flow-svg path {
+  fill: none;
+  stroke: var(--border);
+  stroke-width: 2;
+}
+
+.flow-svg path.active {
+  stroke: var(--primary);
+  stroke-dasharray: 8 4;
+  animation: dashFlow 0.6s linear infinite;
+}
+
+.flow-svg path.complete {
+  stroke: var(--success);
+  stroke-dasharray: none;
+  animation: none;
+}
+
+.flow-svg path.reverse {
+  animation: dashFlowReverse 0.6s linear infinite;
+}
+
+@keyframes dashFlow {
+  to { stroke-dashoffset: -12; }
+}
+
+@keyframes dashFlowReverse {
+  to { stroke-dashoffset: 12; }
+}
+
+.flow-node {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  border: 2px solid rgba(255,255,255,0.08);
+  background: var(--surface);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  z-index: 2;
+  flex-shrink: 0;
+}
+
+.flow-node-icon {
+  font-size: 28px;
+  margin-bottom: 4px;
+  opacity: 0.5;
+  font-family: var(--font-heading);
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.flow-node-label {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-secondary);
+  text-align: center;
+  line-height: 1.2;
+}
+
+.flow-node-sublabel {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: var(--text-secondary);
+  opacity: 0.5;
+  margin-top: 2px;
+}
+
+.flow-node.active {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 4px rgba(249,115,22,0.15), 0 0 24px rgba(249,115,22,0.1);
+}
+
+.flow-node.active .flow-node-icon {
+  color: var(--primary);
+  opacity: 1;
+}
+
+.flow-node.complete {
+  border-color: var(--success);
+  box-shadow: 0 0 0 4px rgba(16,185,129,0.12);
+}
+
+.flow-node.complete .flow-node-icon {
+  color: var(--success);
+  opacity: 1;
+}
+
+.flow-node.complete::after {
+  content: '';
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--success);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='20 6 9 17 4 12'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 14px;
+}
+
+.flow-spacer {
+  width: 80px;
+  flex-shrink: 0;
+}
+
+/* ─── STATUS LINE ─── */
+.status-line {
+  text-align: center;
+  margin-top: 24px;
+  min-height: 24px;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--text-secondary);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.status-line.visible {
+  opacity: 1;
+}
+
+.status-line .highlight {
+  color: var(--primary);
+}
+
+.status-line .success {
+  color: var(--success);
+}
+
+/* ─── STEP INDICATOR ─── */
+.step-indicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 32px;
+}
+
+.step-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.08);
+}
+
+.step-dot.active {
+  background: var(--primary);
+}
+
+.step-dot.complete {
+  background: var(--success);
+}
+
+/* ─── CARDS CONTAINER ─── */
+.cards-section {
+  width: 100%;
+  max-width: 800px;
+  margin: 0 auto;
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.5s ease, transform 0.5s ease;
+  pointer-events: none;
+}
+
+.cards-section.visible {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+.cards-label {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-secondary);
+  margin-bottom: 16px;
+}
+
+.yield-cards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+.yield-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 20px;
+  opacity: 0;
+  transform: translateY(12px);
+  transition: opacity 0.35s ease, transform 0.35s ease;
+}
+
+.yield-card.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.yield-card.recommended {
+  border-left: 3px solid var(--primary);
+}
+
+.yield-card-protocol {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  margin-bottom: 4px;
+}
+
+.yield-card-pair {
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 16px;
+}
+
+.yield-card-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.yield-stat {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+}
+
+.yield-stat-label {
+  color: var(--text-secondary);
+}
+
+.yield-stat-value {
+  font-family: var(--font-mono);
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.yield-stat-value.apy {
+  color: var(--success);
+}
+
+.yield-stat-value.risk-low {
+  color: var(--success);
+}
+
+.yield-stat-value.risk-medium {
+  color: var(--primary);
+}
+
+/* ─── PROOF PANEL ─── */
+.proof-panel {
+  width: 100%;
+  max-width: 800px;
+  margin: 32px auto 0;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 24px;
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.5s ease, transform 0.5s ease;
+  pointer-events: none;
+}
+
+.proof-panel.visible {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+.proof-title {
+  font-family: var(--font-heading);
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.proof-title .verified-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 10px;
+  border-radius: 9999px;
+  background: rgba(16,185,129,0.1);
+  border: 1px solid rgba(16,185,129,0.2);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--success);
+}
+
+.proof-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.proof-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.proof-row:last-child {
+  border-bottom: none;
+}
+
+.proof-label {
+  font-family: var(--font-body);
+  font-size: 13px;
+  color: var(--text-secondary);
+  flex-shrink: 0;
+  min-width: 100px;
+}
+
+.proof-value {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+  text-align: right;
+}
+
+.proof-value a {
+  color: var(--primary);
+  text-decoration: none;
+}
+
+.proof-value a:hover {
+  text-decoration: underline;
+}
+
+.copy-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  min-width: 44px;
+  min-height: 44px;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  border-radius: 4px;
+  flex-shrink: 0;
+  padding: 0;
+}
+
+.copy-btn:hover {
+  background: rgba(255,255,255,0.06);
+  color: var(--text-primary);
+}
+
+.copy-btn.copied {
+  color: var(--success);
+}
+
+.copy-btn svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* ─── HOW IT WORKS ─── */
+.how-section {
+  max-width: 560px;
+  margin: 0 auto;
+  padding: 120px 24px 80px;
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.5s ease, transform 0.5s ease;
+  pointer-events: none;
+}
+
+.how-section.visible {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+.how-label {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-secondary);
+  margin-bottom: 48px;
+}
+
+.how-item {
+  margin-bottom: 48px;
+}
+
+.how-item:last-child {
+  margin-bottom: 0;
+}
+
+.how-item-title {
+  font-family: var(--font-heading);
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 8px;
+  letter-spacing: -0.01em;
+}
+
+.how-item-desc {
+  font-size: 15px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  max-width: 480px;
+}
+
+/* ─── FOOTER ─── */
+.footer {
+  padding: 40px 24px;
+  text-align: center;
+  border-top: 1px solid var(--border);
+}
+
+.footer-text {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-secondary);
+  opacity: 0.5;
+}
+
+/* ─── REDUCED MOTION ─── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  .flow-node.active {
+    border-color: var(--primary);
+    box-shadow: none;
+  }
+
+  .flow-svg path.active {
+    stroke: var(--primary);
+    stroke-dasharray: none;
+    animation: none;
+  }
+
+  .run-btn.running .progress-bar {
+    transition-duration: 0.01ms !important;
+    width: 100%;
+  }
+}
+
+/* ─── RESPONSIVE ─── */
+@media (max-width: 640px) {
+  .hero-text {
+    padding-top: 48px;
+  }
+
+  .flow-diagram {
+    flex-direction: column;
+    gap: 48px;
+    padding: 24px 0;
+  }
+
+  .flow-spacer {
+    width: 0;
+    height: 0;
+  }
+
+  .flow-svg {
+    display: none;
+  }
+
+  .flow-node.active::before {
+    content: '';
+    position: absolute;
+    top: -28px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 2px;
+    height: 24px;
+    background: var(--primary);
+  }
+
+  .flow-node:first-child.active::before {
+    display: none;
+  }
+
+  .yield-cards {
+    grid-template-columns: 1fr;
+  }
+
+  .proof-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+
+  .proof-value {
+    text-align: left;
+    font-size: 12px;
+  }
+
+  .nav {
+    padding: 0 16px;
+  }
+
+  .dna-badge {
+    display: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .hero-heading {
+    font-size: 28px;
+  }
+
+  .hero-sub {
+    font-size: 15px;
+  }
+}
+</style>
+</head>
+<body>
+
+<!-- ─── NAV ─── -->
+<nav class="nav" role="navigation" aria-label="Main navigation">
+  <div class="nav-logo">AgentPay</div>
+  <div class="nav-right">
+    <div class="network-pill" aria-label="Connected to Stacks Testnet">
+      <span class="network-dot" aria-hidden="true"></span>
+      Stacks Testnet
+    </div>
+    <span class="dna-badge" aria-label="Design DNA: Full-bleed, Top-fixed, Immersive, Duotone, Sans-serif">DNA-F-T-I-D-S</span>
+  </div>
+</nav>
+
+<!-- ─── HERO ─── -->
+<main class="hero" id="hero">
+  <div class="hero-text">
+    <h1 class="hero-heading">Trustless Payments Between AI Agents</h1>
+    <p class="hero-sub">Escrow. Verify. Release. No intermediaries.</p>
+  </div>
+
+  <button class="run-btn" id="runBtn" type="button" aria-label="Run demo">
+    <span class="btn-label">Run Demo</span>
+    <div class="progress-bar" aria-hidden="true"></div>
+  </button>
+
+  <!-- Flow Diagram -->
+  <div class="flow-container" id="flowContainer" role="img" aria-label="Payment flow diagram showing Agent A, Smart Contract, and Agent B">
+    <div class="flow-diagram" id="flowDiagram">
+      <div class="flow-node" id="nodeA" aria-label="Agent A, Requester">
+        <span class="flow-node-icon" aria-hidden="true">A</span>
+        <span class="flow-node-label">Agent A</span>
+        <span class="flow-node-sublabel">Requester</span>
+      </div>
+      <div class="flow-spacer" aria-hidden="true"></div>
+      <div class="flow-node" id="nodeC" aria-label="Smart Contract, Escrow">
+        <span class="flow-node-icon" aria-hidden="true">{}</span>
+        <span class="flow-node-label">Contract</span>
+        <span class="flow-node-sublabel">Escrow</span>
+      </div>
+      <div class="flow-spacer" aria-hidden="true"></div>
+      <div class="flow-node" id="nodeB" aria-label="Agent B, Provider">
+        <span class="flow-node-icon" aria-hidden="true">B</span>
+        <span class="flow-node-label">Agent B</span>
+        <span class="flow-node-sublabel">Provider</span>
+      </div>
+
+      <svg class="flow-svg" id="flowSvg" aria-hidden="true" preserveAspectRatio="none">
+        <path id="lineAC" d="" />
+        <path id="lineCB" d="" />
+      </svg>
+    </div>
+
+    <div class="status-line" id="statusLine" aria-live="polite"></div>
+
+    <div class="step-indicator" id="stepIndicator" aria-label="Demo progress">
+      <div class="step-dot" data-step="0"></div>
+      <div class="step-dot" data-step="1"></div>
+      <div class="step-dot" data-step="2"></div>
+      <div class="step-dot" data-step="3"></div>
+      <div class="step-dot" data-step="4"></div>
+      <div class="step-dot" data-step="5"></div>
+      <div class="step-dot" data-step="6"></div>
+      <div class="step-dot" data-step="7"></div>
+      <div class="step-dot" data-step="8"></div>
+      <div class="step-dot" data-step="9"></div>
+    </div>
+  </div>
+
+  <!-- Yield Cards -->
+  <div class="cards-section" id="cardsSection" aria-label="Yield data results">
+    <div class="cards-label">Yield Recommendations</div>
+    <div class="yield-cards">
+      <div class="yield-card recommended" id="card0">
+        <div class="yield-card-protocol">Bitflow</div>
+        <div class="yield-card-pair">sBTC-STX LP</div>
+        <div class="yield-card-stats">
+          <div class="yield-stat">
+            <span class="yield-stat-label">APY</span>
+            <span class="yield-stat-value apy">13.40%</span>
+          </div>
+          <div class="yield-stat">
+            <span class="yield-stat-label">TVL</span>
+            <span class="yield-stat-value">$2.1M</span>
+          </div>
+          <div class="yield-stat">
+            <span class="yield-stat-label">Risk</span>
+            <span class="yield-stat-value risk-medium">Medium</span>
+          </div>
+        </div>
+      </div>
+      <div class="yield-card" id="card1">
+        <div class="yield-card-protocol">StackingDAO</div>
+        <div class="yield-card-pair">STX &rarr; stSTX</div>
+        <div class="yield-card-stats">
+          <div class="yield-stat">
+            <span class="yield-stat-label">APY</span>
+            <span class="yield-stat-value apy">8.90%</span>
+          </div>
+          <div class="yield-stat">
+            <span class="yield-stat-label">TVL</span>
+            <span class="yield-stat-value">$18.0M</span>
+          </div>
+          <div class="yield-stat">
+            <span class="yield-stat-label">Risk</span>
+            <span class="yield-stat-value risk-low">Low</span>
+          </div>
+        </div>
+      </div>
+      <div class="yield-card" id="card2">
+        <div class="yield-card-protocol">Zest Protocol</div>
+        <div class="yield-card-pair">sBTC</div>
+        <div class="yield-card-stats">
+          <div class="yield-stat">
+            <span class="yield-stat-label">APY</span>
+            <span class="yield-stat-value apy">7.20%</span>
+          </div>
+          <div class="yield-stat">
+            <span class="yield-stat-label">TVL</span>
+            <span class="yield-stat-value">$4.2M</span>
+          </div>
+          <div class="yield-stat">
+            <span class="yield-stat-label">Risk</span>
+            <span class="yield-stat-value risk-low">Low</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Proof Panel -->
+  <div class="proof-panel" id="proofPanel" aria-label="Cryptographic proof of payment">
+    <div class="proof-title">
+      Signature Proof
+      <span class="verified-badge">secp256k1 verified</span>
+    </div>
+    <div class="proof-rows">
+      <div class="proof-row">
+        <span class="proof-label">Result Hash</span>
+        <span class="proof-value" id="proofHash">0x7a3b9c1d...e4f82a06</span>
+        <button class="copy-btn" type="button" aria-label="Copy result hash" data-copy="0x7a3b9c1d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e4f82a06">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+        </button>
+      </div>
+      <div class="proof-row">
+        <span class="proof-label">Signature</span>
+        <span class="proof-value" id="proofSig">0xf4a1b2c3...91d7e805</span>
+        <button class="copy-btn" type="button" aria-label="Copy signature" data-copy="0xf4a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8091a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f91d7e805">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+        </button>
+      </div>
+      <div class="proof-row">
+        <span class="proof-label">Public Key</span>
+        <span class="proof-value" id="proofPubkey">ST1PQHQKV0...GZGM3</span>
+        <button class="copy-btn" type="button" aria-label="Copy public key" data-copy="ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM3">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+        </button>
+      </div>
+      <div class="proof-row">
+        <span class="proof-label">Transaction</span>
+        <span class="proof-value">
+          <a href="https://explorer.hiro.so/txid/0x8a2b...3c4d?chain=testnet" target="_blank" rel="noopener noreferrer">0x8a2b...3c4d</a>
+        </span>
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- ─── HOW IT WORKS ─── -->
+<section class="how-section" id="howSection" aria-label="How AgentPay works">
+  <div class="how-label">How It Works</div>
+
+  <div class="how-item">
+    <h2 class="how-item-title">Escrow</h2>
+    <p class="how-item-desc">Agent A locks payment in a Clarity smart contract before any work begins. The funds are held trustlessly on-chain &mdash; neither party can touch them until conditions are met.</p>
+  </div>
+
+  <div class="how-item">
+    <h2 class="how-item-title">Verify</h2>
+    <p class="how-item-desc">Agent B fetches the requested data and signs the result with its private key. The contract verifies the signature using secp256k1 &mdash; the same curve that secures Bitcoin.</p>
+  </div>
+
+  <div class="how-item">
+    <h2 class="how-item-title">Release</h2>
+    <p class="how-item-desc">Once the proof checks out, the contract releases payment to Agent B automatically. No oracles, no multisigs, no human approval. Pure on-chain settlement.</p>
+  </div>
+</section>
+
+<!-- ─── FOOTER ─── -->
+<footer class="footer">
+  <p class="footer-text">AgentPay &middot; Proposal 2: Signal Flow &middot; Inspired by Linear.app + Stripe &middot; Built for Bitcoin</p>
+</footer>
+
+<script>
+(function() {
+  'use strict';
+
+  // ─── DOM REFS ───
+  const runBtn = document.getElementById('runBtn');
+  const btnLabel = runBtn.querySelector('.btn-label');
+  const nodeA = document.getElementById('nodeA');
+  const nodeC = document.getElementById('nodeC');
+  const nodeB = document.getElementById('nodeB');
+  const lineAC = document.getElementById('lineAC');
+  const lineCB = document.getElementById('lineCB');
+  const statusLine = document.getElementById('statusLine');
+  const stepDots = document.querySelectorAll('.step-dot');
+  const cardsSection = document.getElementById('cardsSection');
+  const cards = [document.getElementById('card0'), document.getElementById('card1'), document.getElementById('card2')];
+  const proofPanel = document.getElementById('proofPanel');
+  const howSection = document.getElementById('howSection');
+  const flowDiagram = document.getElementById('flowDiagram');
+  const flowSvg = document.getElementById('flowSvg');
+
+  let running = false;
+  let timeouts = [];
+
+  // ─── SVG PATH CALCULATION ───
+  function updatePaths() {
+    const diagramRect = flowDiagram.getBoundingClientRect();
+    const svgRect = flowSvg.getBoundingClientRect();
+
+    const aRect = nodeA.getBoundingClientRect();
+    const cRect = nodeC.getBoundingClientRect();
+    const bRect = nodeB.getBoundingClientRect();
+
+    const offsetX = svgRect.left;
+    const offsetY = svgRect.top;
+
+    // Center points
+    const aCx = aRect.left + aRect.width / 2 - offsetX;
+    const aCy = aRect.top + aRect.height / 2 - offsetY;
+    const cCx = cRect.left + cRect.width / 2 - offsetX;
+    const cCy = cRect.top + cRect.height / 2 - offsetY;
+    const bCx = bRect.left + bRect.width / 2 - offsetX;
+    const bCy = bRect.top + bRect.height / 2 - offsetY;
+
+    // Edge points (right edge of A, left edge of C, etc.)
+    const aR = aRect.width / 2;
+    const cR = cRect.width / 2;
+    const bR = bRect.width / 2;
+
+    // Horizontal layout
+    const isHorizontal = Math.abs(aCy - cCy) < 40;
+
+    if (isHorizontal) {
+      lineAC.setAttribute('d', `M ${aCx + aR + 4} ${aCy} L ${cCx - cR - 4} ${cCy}`);
+      lineCB.setAttribute('d', `M ${cCx + cR + 4} ${cCy} L ${bCx - bR - 4} ${bCy}`);
+    } else {
+      // Vertical layout for mobile
+      lineAC.setAttribute('d', `M ${aCx} ${aCy + aR + 4} L ${cCx} ${cCy - cR - 4}`);
+      lineCB.setAttribute('d', `M ${cCx} ${cCy + cR + 4} L ${bCx} ${bCy - bR - 4}`);
+    }
+  }
+
+  // Debounced resize handler
+  let resizeTimer;
+  window.addEventListener('resize', function() {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(updatePaths, 100);
+  });
+
+  // Initial path draw
+  requestAnimationFrame(function() {
+    requestAnimationFrame(updatePaths);
+  });
+
+  // ─── HELPERS ───
+  function setStatus(html) {
+    statusLine.innerHTML = html;
+    statusLine.classList.add('visible');
+  }
+
+  function clearStatus() {
+    statusLine.classList.remove('visible');
+  }
+
+  function setStep(n) {
+    stepDots.forEach(function(dot, i) {
+      dot.classList.remove('active', 'complete');
+      if (i < n) dot.classList.add('complete');
+      if (i === n) dot.classList.add('active');
+    });
+  }
+
+  function resetAll() {
+    timeouts.forEach(clearTimeout);
+    timeouts = [];
+    [nodeA, nodeC, nodeB].forEach(function(n) {
+      n.classList.remove('active', 'complete');
+    });
+    lineAC.classList.remove('active', 'complete', 'reverse');
+    lineCB.classList.remove('active', 'complete', 'reverse');
+    clearStatus();
+    stepDots.forEach(function(d) { d.classList.remove('active', 'complete'); });
+    cardsSection.classList.remove('visible');
+    cards.forEach(function(c) { c.classList.remove('visible'); });
+    proofPanel.classList.remove('visible');
+    howSection.classList.remove('visible');
+    running = false;
+    runBtn.classList.remove('running');
+    runBtn.disabled = false;
+    btnLabel.textContent = 'Run Demo';
+    // Reset progress bar
+    var pb = runBtn.querySelector('.progress-bar');
+    pb.style.transition = 'none';
+    pb.style.width = '0%';
+  }
+
+  function delay(ms) {
+    return new Promise(function(resolve) {
+      timeouts.push(setTimeout(resolve, ms));
+    });
+  }
+
+  // ─── COPY BUTTONS ───
+  document.querySelectorAll('.copy-btn').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      var text = btn.getAttribute('data-copy');
+      if (!text) return;
+      navigator.clipboard.writeText(text).then(function() {
+        btn.classList.add('copied');
+        btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
+        setTimeout(function() {
+          btn.classList.remove('copied');
+          btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>';
+        }, 2000);
+      });
+    });
+  });
+
+  // ─── REDUCED MOTION CHECK ───
+  var prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // ─── DEMO SEQUENCE ───
+  async function runDemo() {
+    if (running) return;
+    running = true;
+
+    resetAll();
+    // small delay for reset to take effect
+    await delay(50);
+
+    running = true;
+    runBtn.disabled = true;
+    btnLabel.textContent = 'Running...';
+    runBtn.classList.add('running');
+
+    // Start progress bar
+    var pb = runBtn.querySelector('.progress-bar');
+    pb.style.transition = 'none';
+    pb.style.width = '0%';
+    // Force reflow
+    pb.offsetWidth;
+    pb.style.transition = prefersReduced ? 'none' : 'width 10s linear';
+    pb.style.width = '100%';
+
+    var t = prefersReduced ? 10 : 1;
+
+    // Step 0: Agent A activates
+    setStep(0);
+    nodeA.classList.add('active');
+    setStatus('Creating escrow...');
+    await delay(800 * t);
+
+    // Step 1: Line A→C animates, escrow amount
+    setStep(1);
+    lineAC.classList.add('active');
+    setStatus('<span class="highlight">50 &#181;STX</span> locked in escrow');
+    await delay(900 * t);
+
+    // Step 2: Contract activates
+    setStep(2);
+    nodeA.classList.remove('active');
+    nodeA.classList.add('complete');
+    lineAC.classList.remove('active');
+    lineAC.classList.add('complete');
+    nodeC.classList.add('active');
+    setStatus('Escrow created &mdash; contract holding funds');
+    await delay(800 * t);
+
+    // Step 3: Line C→B, request sent
+    setStep(3);
+    lineCB.classList.add('active');
+    setStatus('Request sent to Agent B');
+    await delay(700 * t);
+
+    // Step 4: Agent B activates, verifying
+    setStep(4);
+    nodeC.classList.remove('active');
+    nodeC.classList.add('complete');
+    lineCB.classList.remove('active');
+    lineCB.classList.add('complete');
+    nodeB.classList.add('active');
+    setStatus('Verifying escrow... Fetching yields...');
+    await delay(900 * t);
+
+    // Step 5: Yield cards slide in
+    setStep(5);
+    setStatus('Yield data received from 3 protocols');
+    cardsSection.classList.add('visible');
+    await delay(200 * t);
+    cards[0].classList.add('visible');
+    await delay(150 * t);
+    cards[1].classList.add('visible');
+    await delay(150 * t);
+    cards[2].classList.add('visible');
+    await delay(600 * t);
+
+    // Step 6: Signing
+    setStep(6);
+    setStatus('Signing recommendation with private key...');
+    await delay(800 * t);
+
+    // Step 7: Reverse line B→C (proof submission)
+    setStep(7);
+    lineCB.classList.remove('complete');
+    lineCB.classList.add('active', 'reverse');
+    setStatus('Submitting cryptographic proof...');
+    await delay(900 * t);
+
+    // Step 8: Contract verifies
+    setStep(8);
+    lineCB.classList.remove('active', 'reverse');
+    lineCB.classList.add('complete');
+    nodeB.classList.remove('active');
+    nodeB.classList.add('complete');
+    nodeC.classList.remove('complete');
+    nodeC.classList.add('active');
+    setStatus('<span class="success">secp256k1-verify &#10003;</span> &mdash; Payment released');
+    await delay(1000 * t);
+
+    // Step 9: All complete
+    setStep(9);
+    nodeC.classList.remove('active');
+    nodeC.classList.add('complete');
+    setStatus('<span class="success">Transaction complete</span> &mdash; 50 &#181;STX transferred to Agent B');
+
+    // Show proof panel
+    await delay(400 * t);
+    proofPanel.classList.add('visible');
+
+    // Show how section
+    await delay(600 * t);
+    howSection.classList.add('visible');
+
+    // Update button
+    runBtn.classList.remove('running');
+    runBtn.disabled = false;
+    btnLabel.textContent = 'Run Again';
+    running = false;
+
+    // Complete all step dots
+    stepDots.forEach(function(d) {
+      d.classList.remove('active');
+      d.classList.add('complete');
+    });
+  }
+
+  // If reduced motion, show final state immediately
+  if (prefersReduced) {
+    runBtn.addEventListener('click', function() {
+      [nodeA, nodeC, nodeB].forEach(function(n) { n.classList.add('complete'); });
+      lineAC.classList.add('complete');
+      lineCB.classList.add('complete');
+      stepDots.forEach(function(d) { d.classList.add('complete'); });
+      setStatus('<span class="success">Transaction complete</span> &mdash; 50 &#181;STX transferred to Agent B');
+      cardsSection.classList.add('visible');
+      cards.forEach(function(c) { c.classList.add('visible'); });
+      proofPanel.classList.add('visible');
+      howSection.classList.add('visible');
+      btnLabel.textContent = 'Run Again';
+    });
+  } else {
+    runBtn.addEventListener('click', function() {
+      if (!running) {
+        resetAll();
+        requestAnimationFrame(function() {
+          runDemo();
+        });
+      }
+    });
+  }
+
+  // Handle keyboard
+  runBtn.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      runBtn.click();
+    }
+  });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AgentPay — Design Proposals</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --bg: #09090b;
+    --surface: #18181b;
+    --border: rgba(255,255,255,0.06);
+    --text: #fafafa;
+    --text-secondary: #a1a1aa;
+    --accent: #f97316;
+    --gold: #c9a227;
+    --green: #00ff41;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Space Grotesk', system-ui, sans-serif;
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  header {
+    padding: 48px 32px 40px;
+    text-align: center;
+    border-bottom: 1px solid var(--border);
+  }
+
+  header h1 {
+    font-size: 32px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    margin-bottom: 8px;
+  }
+
+  header p {
+    color: var(--text-secondary);
+    font-size: 15px;
+    line-height: 1.5;
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+    gap: 24px;
+    padding: 32px;
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    transition: border-color 200ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .card:hover {
+    border-color: rgba(255,255,255,0.12);
+  }
+
+  .card-preview {
+    position: relative;
+    width: 100%;
+    height: 280px;
+    overflow: hidden;
+    background: #000;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .card-preview iframe {
+    width: 200%;
+    height: 200%;
+    border: none;
+    transform: scale(0.5);
+    transform-origin: top left;
+    pointer-events: none;
+  }
+
+  .card-body {
+    padding: 20px;
+  }
+
+  .card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+  }
+
+  .card-title {
+    font-size: 18px;
+    font-weight: 600;
+  }
+
+  .dna-badge {
+    font-size: 10px;
+    font-family: 'IBM Plex Mono', monospace;
+    padding: 3px 8px;
+    border-radius: 4px;
+    background: rgba(255,255,255,0.06);
+    color: var(--text-secondary);
+    letter-spacing: 0.5px;
+  }
+
+  .card-desc {
+    color: var(--text-secondary);
+    font-size: 13px;
+    line-height: 1.5;
+    margin-bottom: 16px;
+  }
+
+  .card-meta {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .tag {
+    font-size: 11px;
+    padding: 3px 10px;
+    border-radius: 4px;
+    background: rgba(255,255,255,0.04);
+    color: var(--text-secondary);
+  }
+
+  .card-link {
+    display: block;
+    text-align: center;
+    padding: 12px;
+    margin-top: 16px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--accent);
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 500;
+    transition: background 200ms cubic-bezier(0.22, 1, 0.36, 1), border-color 200ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .card-link:hover {
+    background: rgba(249, 115, 22, 0.08);
+    border-color: rgba(249, 115, 22, 0.3);
+  }
+
+  .card-link:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px var(--accent);
+  }
+
+  footer {
+    text-align: center;
+    padding: 32px;
+    color: var(--text-secondary);
+    font-size: 12px;
+    border-top: 1px solid var(--border);
+  }
+
+  @media (max-width: 480px) {
+    .grid { grid-template-columns: 1fr; padding: 16px; }
+    header { padding: 32px 16px; }
+    header h1 { font-size: 24px; }
+  }
+</style>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&family=IBM+Plex+Mono:wght@400&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<header>
+  <h1>AgentPay — Design Proposals</h1>
+  <p>3 structurally different approaches. Pick a winner, combine elements, or go wild.</p>
+</header>
+
+<div class="grid">
+
+  <div class="card">
+    <div class="card-preview">
+      <iframe src="proposal-1.html" loading="lazy" tabindex="-1" title="Proposal 1 preview"></iframe>
+    </div>
+    <div class="card-body">
+      <div class="card-header">
+        <span class="card-title">Terminal</span>
+        <span class="dna-badge">DNA-S-H-M-M-R</span>
+      </div>
+      <p class="card-desc">Bloomberg hacker aesthetic. CLI-style live output, green-on-black, monospace everything. ASCII art logo, typewriter effect, box-drawing tables.</p>
+      <div class="card-meta">
+        <span class="tag">Bloomberg</span>
+        <span class="tag">Brutalist</span>
+        <span class="tag">JetBrains Mono</span>
+      </div>
+      <a href="proposal-1.html" class="card-link">Open Proposal 1</a>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-preview">
+      <iframe src="proposal-2.html" loading="lazy" tabindex="-1" title="Proposal 2 preview"></iframe>
+    </div>
+    <div class="card-body">
+      <div class="card-header">
+        <span class="card-title">Signal Flow</span>
+        <span class="dna-badge">DNA-F-T-I-D-S</span>
+      </div>
+      <p class="card-desc">Animated node graph with data flowing between agents. Clean, modern, immersive. Orange duotone on dark. Nodes light up as each step completes.</p>
+      <div class="card-meta">
+        <span class="tag">Linear</span>
+        <span class="tag">Stripe</span>
+        <span class="tag">Space Grotesk</span>
+      </div>
+      <a href="proposal-2.html" class="card-link">Open Proposal 2</a>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-preview">
+      <iframe src="proposal-3.html" loading="lazy" tabindex="-1" title="Proposal 3 preview"></iframe>
+    </div>
+    <div class="card-body">
+      <div class="card-header">
+        <span class="card-title">Ledger</span>
+        <span class="dna-badge">DNA-A-O-S-N-E</span>
+      </div>
+      <p class="card-desc">Financial settlement report aesthetic. Asymmetric split layout, serif typography, gold accents. Feels like money, not tech. Bloomberg brief meets Goldman settlement.</p>
+      <div class="card-meta">
+        <span class="tag">Editorial</span>
+        <span class="tag">Koinly</span>
+        <span class="tag">Playfair Display</span>
+      </div>
+      <a href="proposal-3.html" class="card-link">Open Proposal 3</a>
+    </div>
+  </div>
+
+</div>
+
+<footer>
+  AgentPay Design Proposals — 14 Mar 2026 — 0 shared DNA genes between any pair
+</footer>
+
+</body>
+</html>
