@@ -5,3 +5,4 @@ dist/
 *.mp4
 .DS_Store
 .claude/
+.vercel/

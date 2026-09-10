@@ -1,6 +1,6 @@
 # Paygent
 
-**Trustless machine-to-machine payments for AI agents, settled on Bitcoin via Stacks.**
+**;;se **
 
 ## The Problem
 
